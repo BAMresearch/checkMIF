@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Validate mechanochemical reaction documentation in MIF files.">
+  <title>checkMIF · Mechanochemistry validation</title>
+  <link rel="icon" type="image/svg+xml" href="main_icon.svg?v=40994B38">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="checkMIF home">
+      <img class="brand-logo" src="main_icon.svg?v=40994B38" alt="" aria-hidden="true">
+      <span>checkMIF</span>
+    </a>
+    <nav aria-label="Page actions">
+      <button class="text-button print-button" id="printButton" type="button" disabled>Print / PDF</button>
+      <button class="primary small" id="exportButton" type="button" disabled>Export report</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="pageTitle">
+      <div>
+        <h1 id="pageTitle">Validate a MIF record</h1>
+      </div>
+      <div class="supporter-mark"><img class="supporter-logo" src="BAM_Logo_ohne_Name.jpg" alt="BAM"></div>
+    </section>
+
+    <section class="workspace" aria-label="Reaction file validator">
+      <div class="upload-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="step">Input</p>
+            <h2>MIF file</h2>
+          </div>
+        </div>
+
+        <label class="dropzone" id="dropzone" for="fileInput">
+          <input id="fileInput" type="file" accept=".mif">
+          <span class="upload-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+          </span>
+          <strong>Drop one MIF file here</strong>
+          <span>or choose a .mif file (maximum 5 MB)</span>
+        </label>
+
+        <div class="file-list" id="fileList" aria-live="polite">
+          <div class="file-slot empty"><span>MIF</span><p>No file loaded</p></div>
+        </div>
+
+      </div>
+
+      <div class="summary-panel" id="summaryPanel" aria-live="polite">
+        <div class="panel-heading">
+          <div>
+            <p class="step">Assessment</p>
+            <h2>Readiness</h2>
+          </div>
+        </div>
+
+        <div class="empty-summary" id="emptySummary">
+          <h3>No assessment yet</h3>
+          <p>Select a MIF file to see documentation gaps, their severity, and how to resolve each alert.</p>
+        </div>
+
+        <div class="score-summary hidden" id="scoreSummary">
+          <div class="score-ring" id="scoreRing">
+            <div><strong id="scoreValue">0</strong><span>%</span><small>readiness</small></div>
+          </div>
+          <div class="score-copy">
+            <span class="status-pill" id="statusPill">Needs revision</span>
+            <h3 id="scoreHeadline">Documentation is incomplete</h3>
+            <p id="scoreDescription"></p>
+          </div>
+        </div>
+
+        <div class="severity-grid hidden" id="severityGrid">
+          <button data-severity="A" type="button"><span>A</span><strong id="countA">0</strong><small>Critical</small></button>
+          <button data-severity="B" type="button"><span>B</span><strong id="countB">0</strong><small>Major</small></button>
+          <button data-severity="C" type="button"><span>C</span><strong id="countC">0</strong><small>Review</small></button>
+          <button data-severity="D" type="button"><span>D</span><strong id="countD">0</strong><small>Improve</small></button>
+          <button data-severity="I" type="button"><span>I</span><strong id="countI">0</strong><small>Info</small></button>
+        </div>
+        <div class="quality-grid hidden" id="qualityGrid" aria-label="Documentation quality dimensions">
+          <div data-metric="completeness"><span>Completeness</span><i></i><strong>0</strong></div>
+          <div data-metric="consistency"><span>Consistency</span><i></i><strong>0</strong></div>
+          <div data-metric="reproducibility"><span>Reproducibility</span><i></i><strong>0</strong></div>
+          <div data-metric="analytical_support"><span>Analytical support</span><i></i><strong>0</strong></div>
+          <div data-metric="traceability_fairness"><span>Traceability / FAIR</span><i></i><strong>0</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="report hidden" id="reportSection" aria-labelledby="reportTitle">
+      <div class="report-header">
+        <div>
+          <p class="step">Report</p>
+          <h2 id="reportTitle">Validation alerts</h2>
+        </div>
+        <div class="report-tools">
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+            <span class="sr-only">Search alerts</span>
+            <input id="searchInput" type="search" placeholder="Search alerts">
+          </label>
+          <div class="filter-group" id="filterGroup" aria-label="Filter alerts">
+            <button class="active" data-filter="all" type="button">All</button>
+            <button data-filter="A" type="button">A</button>
+            <button data-filter="B" type="button">B</button>
+            <button data-filter="C" type="button">C</button>
+            <button data-filter="D" type="button">D</button>
+            <button data-filter="I" type="button">Info</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-nav" id="categoryNav" aria-label="Alert categories"></div>
+      <div class="alerts" id="alertsList"></div>
+      <div class="no-results hidden" id="noResults">No alerts match this view.</div>
+    </section>
+
+    <section class="legend" aria-labelledby="legendTitle">
+      <div>
+        <h2 id="legendTitle">Alert grades</h2>
+      </div>
+      <div class="legend-items">
+        <article><span class="badge a">A</span><div><h3>Critical</h3><p>Core information is absent, invalid, or contradictory. Reproduction is not credible.</p></div></article>
+        <article><span class="badge b">B</span><div><h3>Major</h3><p>An important experimental or analytical detail needs correction before publication.</p></div></article>
+        <article><span class="badge c">C</span><div><h3>Review</h3><p>An unusual value, weak description, or incomplete relationship should be checked.</p></div></article>
+        <article><span class="badge d">D</span><div><h3>Improve</h3><p>Useful context would make the record easier to interpret, compare, or reuse.</p></div></article>
+        <article><span class="badge i">I</span><div><h3>Information</h3><p>A derived value or schema note that does not reduce the readiness score.</p></div></article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>checkMIF <strong>v1.2.2</strong></span>
+    <nav aria-label="Site information">
+      <button type="button" id="methodButton">Validation method</button>
+      <button type="button" data-info-dialog="termsDialog">Terms of use</button>
+      <button type="button" data-info-dialog="dataDialog">Data safety</button>
+      <button type="button" data-info-dialog="changesDialog">Changelog</button>
+    </nav>
+  </footer>
+
+  <dialog class="info-dialog export-dialog" id="exportDialog" aria-labelledby="exportTitle">
+    <div class="dialog-head"><h2 id="exportTitle">Export report</h2><button type="button" id="closeExportDialog" aria-label="Close export options">×</button></div>
+    <div class="dialog-body">
+      <p>Choose a format for the complete assessment and findings.</p>
+      <div class="export-options">
+        <button type="button" data-export-format="json"><strong>JSON</strong><span>Structured data for software and databases</span></button>
+        <button type="button" data-export-format="txt"><strong>Text (.txt)</strong><span>Readable in a text editor or word processor</span></button>
+      </div>
+      <p>For a formatted PDF, use <strong>Print / PDF</strong> and choose Save as PDF in the print window.</p>
+    </div>
+  </dialog>
+
+  <dialog class="info-dialog" id="termsDialog" aria-labelledby="termsTitle">
+    <div class="dialog-head"><h2 id="termsTitle">Terms of use</h2><button type="button" data-dialog-close aria-label="Close terms of use">×</button></div>
+    <div class="dialog-body">
+      <p>checkMIF identifies possible gaps and inconsistencies in reaction documentation. Its findings support review; they do not establish chemical identity, experimental safety, or publication readiness.</p>
+      <p>Check each finding against the laboratory record and use scientific judgment when revising the MIF file.</p>
+    </div>
+  </dialog>
+
+  <dialog class="info-dialog" id="dataDialog" aria-labelledby="dataTitle">
+    <div class="dialog-head"><h2 id="dataTitle">Data safety</h2><button type="button" data-dialog-close aria-label="Close data safety">×</button></div>
+    <div class="dialog-body">
+      <p>checkMIF reads the selected MIF file in your browser and runs the validation there. The validator does not upload the file. Reloading the page clears the current assessment.</p>
+      <p>Export report downloads JSON or text to your device. Print / PDF opens your browser’s print dialog. If a MIF draft arrives from Paper Import, its temporary browser handoff is removed after checkMIF reads it.</p>
+    </div>
+  </dialog>
+
+  <dialog class="info-dialog" id="changesDialog" aria-labelledby="changesTitle">
+    <div class="dialog-head"><h2 id="changesTitle">Changelog</h2><button type="button" data-dialog-close aria-label="Close changelog">×</button></div>
+    <div class="dialog-body">
+      <h3>Version 1.2.2 · November 2026</h3>
+      <p>Added JSON and readable text downloads from Export report. Print / PDF remains available for a formatted copy.</p>
+      <h3>Version 1.2.1 · November 2026</h3>
+      <p>Small apparent excesses in mass balance, recovery, and percentage yield now prompt an Info review. Larger excesses receive C or B alerts. Mass-based yields are no longer treated as percentages.</p>
+      <h3>Visual refresh · November 2026</h3>
+      <p>Revised the interface and wording for clearer scientific reporting.</p>
+      <h3>Version 1.2.0 · November 2026</h3>
+      <p>Added generator section references to every finding, physical-range and date checks, reagent identity checks, and clearer handling of routine versus monitored process timelines.</p>
+      <h3>Version 1.1.0 · September 2026</h3>
+      <p>Added single-file MIF validation, device-aware checks, graded alerts, and documentation quality scores.</p>
+    </div>
+  </dialog>
+
+  <dialog id="methodDialog">
+    <div class="dialog-head">
+      <div><p class="step">Methodology</p><h2>What checkMIF checks</h2></div>
+      <button id="closeDialog" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="dialog-body">
+      <p class="lead">The rules combine the MIF V3 lifecycle schema with device-aware reproducibility checks derived from current mechanochemistry literature. Legacy V2 records remain supported. Alerts are advisory: a flagged value may be scientifically justified, but it should be reviewed and documented.</p>
+      <div class="method-grid">
+        <article><span>1</span><h3>Parse & normalize</h3><p>Read one MIF, distinguish absent values from declared missing values, and check expected value types and units.</p></article>
+        <article><span>2</span><h3>Check integrity</h3><p>Detect malformed fields, impossible ranges, invalid dates, and contradictions between reported values.</p></article>
+        <article><span>3</span><h3>Apply context</h3><p>Choose rules for mixer mills, planetary mills, or extruders and test dependent fields together.</p></article>
+        <article><span>4</span><h3>Assess readiness</h3><p>Weight A–D alerts, keep Info notes non-penalizing, and calculate completeness, consistency, reproducibility, analytical-support and traceability scores.</p></article>
+      </div>
+      <p>For mass balance, derived recovery, and explicitly percentage-based yield, values above 100% through 110% receive Info; above 110% through 150% receive C; above 150% or below 0% receive B. These are review thresholds, not physical limits: verify the calculation basis, uncertainty, and any material uptake or retained solvent.</p>
+      <h3>Evidence base</h3>
+      <ul class="sources">
+        <li><a href="https://goldbook.iupac.org/terms/view/R05267" target="_blank" rel="noreferrer">IUPAC Gold Book</a>: definition of relative humidity.</li>
+        <li><a href="https://www.cas.org/es-es/training/documentation/chemical-substances/checkdig" target="_blank" rel="noreferrer">CAS Registry documentation</a>: registry number format and check digit.</li>
+        <li><a href="https://onlinelibrary.wiley.com/doi/full/10.1002/ange.202409731" target="_blank" rel="noreferrer">Jafter et al., 2024</a>: equipment parameters and energy reporting.</li>
+        <li><a href="https://pubs.rsc.org/en/content/articlehtml/2019/cs/c7cs00813a" target="_blank" rel="noreferrer">James et al., 2019</a>: milling conditions and the liquid-assisted grinding η parameter.</li>
+        <li><a href="https://pubs.rsc.org/en/content/articlehtml/2026/mr/d5mr00088b" target="_blank" rel="noreferrer">RSC Mechanochemistry, 2026</a>: vessel, media, charge, speed, duration, and energy reporting.</li>
+        <li><a href="https://docs.open-reaction-database.org/en/latest/schema.html" target="_blank" rel="noreferrer">Open Reaction Database schema</a>: structured provenance, inputs, conditions, workups, and outcomes.</li>
+        <li><a href="https://pubs.acs.org/doi/10.1021/jacs.1c09820" target="_blank" rel="noreferrer">Kearnes et al., 2021</a>: interoperable reaction records and machine-readable evidence.</li>
+        <li><a href="https://pubs.rsc.org/os/content/articlelanding/2023/cs/d2cs00997h" target="_blank" rel="noreferrer">Green chemistry metrics review</a>: PMI, E-factor, mass efficiency, and system boundaries.</li>
+        <li><a href="https://doi.org/10.1021/acs.accounts.2c00062" target="_blank" rel="noreferrer">In situ mechanochemistry monitoring</a>: time-resolved observations of reaction progress and intermediates.</li>
+      </ul>
+      <div class="limitation"><strong>Scope.</strong> This version validates documentation, not chemical truth. It does not simulate impact energy, verify molecular identities, or replace peer review. Thresholds are transparent heuristics and should evolve with community feedback.</div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
